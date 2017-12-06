@@ -36,6 +36,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super-secret'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'app.db')
 app.config['SQLALCHEMY_MIGRATE_REPO'] = os.path.join(basedir, 'db_repository')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 jwt = JWT(app, authenticate, identity)
 
@@ -56,24 +57,71 @@ def after_request(response):
 @app.route('/register', methods=('POST', ))
 def register_new_user():
     data = json.loads(request.data.decode())
-    print(data)
-    return json.dumps(True)
+    print('firstName: {}'.format(data['firstName']))
+    print('lastName: {}'.format(data['lastName']))
+    print('email: {}'.format(data['email']))
+    print('login: {}'.format(data['login']))
+    print('password: {}'.format(data['password']))
+    return json.dumps(data['username'] != 'failed')
 
 
-@app.route('/unprotected')
-def unprotected():
-    return json.dumps({
-        'message': 'This is an unprotected resource.'
-    })
-
-
-@app.route('/protected')
+@app.route('/userinfo')
 @jwt_required()
-def protected():
+def get_user_info():
     return json.dumps({
-        'message': 'This is a protected resource.',
-        'current_identity': str(current_identity)
+        'firstName': 'Petr',
+        'lastName': 'Popadi',
+        'email': 'petrpopadi@example.com',
+        'login': 'petr_popadi',
     })
+
+
+@app.route('/dict', methods=('PUT', 'POST'))
+@jwt_required()
+def process_dict_request_write():
+    data = json.loads(request.data.decode())
+    word = data['word']  # 'dog'
+    translate = data['translate']  # ['собака', 'пёсик']
+    if request.method == 'PUT':
+        # if word in user_dict: return json.dumps(False)
+        # user_dict.write(word, translate)
+        return json.dumps(True)
+    elif request.method == 'POST':
+        # user_dict.write(word, translate)
+        return json.dumps(True)
+    else:
+        raise RuntimeError('Unknown method')
+
+
+@app.route('/dict', methods=('GET', ))
+@jwt_required()
+def process_dict_request_read():
+    if request.data:
+        data = json.loads(request.data.decode())
+        word = data['word']
+        # if word in user_dict: return json.dumps(user_dict['word'])
+        # else: return json.dumps(False)
+        return json.dumps(['собака', 'пёсик'])
+    else:
+        # return json.dumps(user_dict)
+        return json.dumps({'dog': ['собака', 'пёсик']})
+
+
+@app.route('/task')
+@jwt_required()
+def generate_task():
+    return json.dumps([
+        {
+            'word': 'dog',
+            'answers': ['кот', 'машина', 'собака', 'морковь'],
+            'trueAnswer': 2,
+        },
+        {
+            'word': 'cat',
+            'answers': ['девочка', 'кот', 'ножницы', 'тёща'],
+            'trueAnswer': 1,
+        },
+    ])
 
 
 if __name__ == '__main__':
