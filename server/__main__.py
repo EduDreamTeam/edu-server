@@ -1,5 +1,4 @@
 import json
-import os
 
 from flask import Flask, request
 from flask_jwt import JWT, jwt_required, current_identity
@@ -30,16 +29,10 @@ def identity(payload):
     return payload['identity']
 
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'super-secret'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'app.db')
-app.config['SQLALCHEMY_MIGRATE_REPO'] = os.path.join(basedir, 'db_repository')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+app.config.from_object('config.BaseConfig')
 
 jwt = JWT(app, authenticate, identity)
-
 db = SQLAlchemy(app)
 
 # send CORS headers
