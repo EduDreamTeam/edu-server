@@ -5,20 +5,10 @@ from flask import Flask, request
 from flask_jwt import JWT, jwt_required, current_identity
 from flask_sqlalchemy import SQLAlchemy
 
+from db.entity.base import Session, engine, Base
+from db.entity.user import User
+from db.db_controller import DBController
 
-class User(object):
-    __slots__ = ('id', 'username', 'password')
-
-    def __init__(self, identifier, username, password):
-        self.id = identifier
-        self.username = username
-        self.password = password
-
-    def __str__(self):
-        return "User(id='{}')".format(self.id)
-
-
-user = User(1, 'user', 'password')
 
 
 def authenticate(username, password):
@@ -75,6 +65,21 @@ def protected():
         'current_identity': str(current_identity)
     })
 
+@app.route('/users')
+def get_users():
+    # users = session.query(User)
+    users = DBController.get_users()
+    return json.dumps({
+        'First user: ': users[0].name
+    })
+
+@app.route('/dictionary')
+def get_dictionary_by_user():
+    users = DBController.get_users()
+    dict = DBController.get_dictionary_by_user(users[0])
+    return json.dumps({
+        'First target word in dictionary is ': dict[0].tgt_word.text
+    })
 
 if __name__ == '__main__':
     app.run()
