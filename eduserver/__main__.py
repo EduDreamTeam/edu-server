@@ -1,17 +1,19 @@
 import json
 
+from os import path
+
 from flask import Flask, request
 from flask_jwt import JWT, jwt_required, current_identity
-from flask_sqlalchemy import SQLAlchemy
 
-from db.entity.base import Session, engine, Base
-from db.entity.user import User
-from db.db_controller import DBController
+from eduserver.db.entity.base import Session, engine, Base
+from eduserver.db.entity.user import User
+from eduserver.db.db_controller import DBController
+
+from eduserver.environment import _package_dir
 
 
-
-def authenticate(username, password):
-    if username == user.username and password == user.password:
+def authenticate(login, password):
+    if login == 'user' and password == 'pwd':
         return user
 
 
@@ -20,10 +22,9 @@ def identity(payload):
 
 
 app = Flask(__name__)
-app.config.from_object('config.BaseConfig')
+app.config.from_pyfile(path.join(_package_dir, 'environment.py'))
 
 jwt = JWT(app, authenticate, identity)
-db = SQLAlchemy(app)
 
 # send CORS headers
 @app.after_request

@@ -1,7 +1,7 @@
 from sqlalchemy import *
 from sqlalchemy.orm import *
-from server.db.entity.base import Base
-from server.db.entity.language import Language
+from eduserver.db.entity.base import Base
+from eduserver.db.entity.language import Language
 
 
 class Word(Base):

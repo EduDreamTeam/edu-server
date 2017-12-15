@@ -1,12 +1,12 @@
 from sqlalchemy import *
 from sqlalchemy.orm import *
-from server.db.entity.base import Base
-from server.db.entity.translation import Translation
+from eduserver.db.entity.base import Base
+from eduserver.db.entity.translation import Translation
 
 users_translations_association = Table('users_translations', Base.metadata,
-                                     Column('user_id', Integer, ForeignKey('users.id')),
-                                     Column('translation_id', Integer, ForeignKey('translations.id'))
-                                     )
+                                       Column('user_id', Integer, ForeignKey('users.id')),
+                                       Column('translation_id', Integer, ForeignKey('translations.id'))
+                                       )
 
 
 class User(Base):

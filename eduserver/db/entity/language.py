@@ -1,6 +1,6 @@
 from sqlalchemy import *
 from sqlalchemy.orm import *
-from server.db.entity.base import Base
+from eduserver.db.entity.base import Base
 
 
 class Language(Base):
