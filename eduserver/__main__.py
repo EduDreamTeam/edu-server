@@ -6,7 +6,7 @@ from os import path
 from flask import Flask, request
 from flask_jwt import JWT, jwt_required, current_identity
 
-from eduserver.db import closing_session, User, Language, Word, Translation
+from eduserver.db import closing_session, initialize_db, User, Language, Word, Translation
 
 from eduserver.environment import _package_dir
 
@@ -145,4 +145,5 @@ def generate_task():
 
 
 if __name__ == '__main__':
+    initialize_db()
     app.run()

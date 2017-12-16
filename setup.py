@@ -5,5 +5,6 @@ setup(name='edu-server',
       description='Education project server',
       author='EduDreamTeam',
       url='https://github.com/EduDreamTeam/edu-server',
-      requires=['flask', 'flask_jwt', 'SQLAlchemy']
+      packages=['eduserver'],
+      requires=['flask', 'flask_jwt', 'SQLAlchemy'],
       )
