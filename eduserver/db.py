@@ -1,6 +1,6 @@
 from os import path
 from contextlib import contextmanager
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from sqlalchemy import create_engine, Table, Column, Integer, ForeignKey, String, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
@@ -11,6 +11,7 @@ from eduserver.environment import _package_dir
 engine = create_engine("sqlite:///{}".format(path.join(_package_dir, 'edu.db')), encoding='utf-8')
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
+
 
 @contextmanager
 def closing_session():
@@ -53,9 +54,11 @@ class Translation(Base):
     src_word = relationship("Word", foreign_keys=[src_word_id])
     tgt_word_id = Column(Integer, ForeignKey('words.id'))
     tgt_word = relationship("Word", foreign_keys=[tgt_word_id])
-    __table_args__ = (UniqueConstraint('src_word_id', 'tgt_word_id', name='uc'), )
+    __table_args__ = (UniqueConstraint('src_word_id', 'tgt_word_id', name='uc'),)
 
     def __init__(self, src_word, tgt_word):
+        if src_word.language == tgt_word.language:
+            raise RuntimeError('Incorrect translate')
         self.src_word = src_word
         self.tgt_word = tgt_word
 
@@ -86,10 +89,12 @@ class User(Base):
         self.lastName = last_name
         self.email = email
 
-    def get_id_holder(self):
+    @property
+    def id_holder(self):
         return self.IdHolder(self.login)
 
-    def get_info(self):
+    @property
+    def info(self):
         return {
             'login': self.login,
             'firstName': self.firstName,
@@ -97,15 +102,15 @@ class User(Base):
             'email': self.email,
         }
 
+    @property
+    def translations(self):
+        res = defaultdict(list)
+        session = Session()
 
-# session = Session()
-# class DBController:
-#     session = Session()
-#
-#     @staticmethod
-#     def get_users():
-#         return session.query(User).all()
-#
-#     def get_dictionary_by_user(self):
-#         usr = session.query(User).get(self.id)
-#         return usr.dictionary
+        def get_word(id):
+            return session.query(Word).get(id).text
+
+        for k, v in ((get_word(t.src_word_id), get_word(t.tgt_word_id)) for t in self.dictionary):
+            res[k].append(v)
+
+        return dict(res)

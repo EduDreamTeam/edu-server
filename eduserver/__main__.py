@@ -1,24 +1,22 @@
 import json
+import random
 
 from os import path
 
 from flask import Flask, request
 from flask_jwt import JWT, jwt_required, current_identity
 
-from eduserver.db import closing_session, engine, Base, User
+from eduserver.db import closing_session, User, Language, Word, Translation
 
 from eduserver.environment import _package_dir
 
 
 def authenticate(login, password):
-    print('find User:', login, password)
     with closing_session() as session:
         user = session.query(User).get(login)
         if user and user.password == password:
-            print('User find')
-            return user.get_id_holder()
+            return user.id_holder
         else:
-            print('User NOT find')
             return None
 
 
@@ -64,74 +62,87 @@ def register_new_user():
 @app.route('/userinfo')
 @jwt_required()
 def get_user_info():
-    print(current_identity)
     with closing_session() as session:
         user = session.query(User).get(str(current_identity))
-        return json.dumps(user.get_info())
+        return json.dumps(user.info)
 
 
 @app.route('/dict', methods=('PUT', 'POST'))
 @jwt_required()
 def process_dict_request_write():
     data = json.loads(request.data.decode())
-    word = data['word']  # 'dog'
-    translate = data['translate']  # ['собака', 'пёсик']
-    if request.method == 'PUT':
-        # if word in user_dict: return json.dumps(False)
-        # user_dict.write(word, translate)
-        return json.dumps(True)
-    elif request.method == 'POST':
-        # user_dict.write(word, translate)
-        return json.dumps(True)
-    else:
-        raise RuntimeError('Unknown method')
+    str_word = data['word']  # 'dog'
+    str_translate = data['translate']  # ['собака', 'пёсик']
+
+    rewrite = {'PUT': False, 'POST': True}[request.method]
+
+    with closing_session() as session:
+        user = session.query(User).get(str(current_identity))
+        # TODO: realize rewriting
+        # TODO: optimize have in translation checking
+        if str_word in user.translations:
+            return json.dumps(False)
+
+        english = session.query(Language).filter(Language.title == 'English').first()
+        russian = session.query(Language).filter(Language.title == 'Russian').first()
+
+        word_en = Word(str_word, english)
+        for w in (Word(t, russian) for t in str_translate):
+            translation = Translation(word_en, w)
+            user.dictionary.append(translation)
+
+    return json.dumps(True)
 
 
 @app.route('/dict', methods=('GET', ))
 @jwt_required()
 def process_dict_request_read():
-    if request.data:
-        data = json.loads(request.data.decode())
-        word = data['word']
-        # if word in user_dict: return json.dumps(user_dict['word'])
-        # else: return json.dumps(False)
-        return json.dumps(['собака', 'пёсик'])
-    else:
-        # return json.dumps(user_dict)
-        return json.dumps({'dog': ['собака', 'пёсик']})
+    with closing_session() as session:
+        user_dict = session.query(User).get(str(current_identity)).translations
+        if request.data:
+            data = json.loads(request.data.decode())
+            word = data['word']
+            if word in user_dict: return json.dumps(user_dict[word])
+            else: return json.dumps(False)
+            # return json.dumps(['собака', 'пёсик'])
+        else:
+            return json.dumps(user_dict)
+            # return json.dumps({'dog': ['собака', 'пёсик']})
 
 
 @app.route('/task')
 @jwt_required()
 def generate_task():
+    with closing_session() as session:
+        user_dict = session.query(User).get(str(current_identity)).translations
+
+    answers_count = 4
+
+    def generate_one_task(input_dict):
+        dict_copy = dict(input_dict)
+        word = random.choice(tuple(dict_copy.keys()))
+        true_answer = random.choice(dict_copy[word])
+        del dict_copy[word]
+
+        answers = []
+        for i in dict_copy.values():
+            answers.extend(i)
+        random.shuffle(answers)
+
+        answers = answers[0: answers_count - 1]
+        true_answer_index = random.randrange(0, answers_count - 1)
+        answers.insert(true_answer_index, true_answer)
+
+        return {
+            'word': word,
+            'answers': answers,
+            'trueAnswer': true_answer_index,
+        }
+
     return json.dumps([
-        {
-            'word': 'dog',
-            'answers': ['кот', 'машина', 'собака', 'морковь'],
-            'trueAnswer': 2,
-        },
-        {
-            'word': 'cat',
-            'answers': ['девочка', 'кот', 'ножницы', 'тёща'],
-            'trueAnswer': 1,
-        },
+        generate_one_task(user_dict) for _ in range(5)
     ])
 
-# @app.route('/users')
-# def get_users():
-#     # users = session.query(User)
-#     users = DBController.get_users()
-#     return json.dumps({
-#         'First user: ': users[0].name
-#     })
-#
-# @app.route('/dictionary')
-# def get_dictionary_by_user():
-#     users = DBController.get_users()
-#     dict = DBController.get_dictionary_by_user(users[0])
-#     return json.dumps({
-#         'First target word in dictionary is ': dict[0].tgt_word.text
-#     })
 
 if __name__ == '__main__':
     app.run()
