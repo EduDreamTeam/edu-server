@@ -12,17 +12,23 @@ def main():
 
     session = Session()
 
-    russian = Language("Русский")
+    russian = Language("Russian")
     english = Language("English")
     session.add(russian)
     session.add(english)
 
-    word1 = Word("слово1", russian)
-    word2 = Word("word2", english)
+    word1 = Word("word2", english)
+    word2 = Word("слово1", russian)
     session.add(word1)
     session.add(word2)
 
     translation = Translation(word1, word2)
+
+    try:
+        Translation(word1, word1)
+    except RuntimeError as e:
+        print(e)
+
     session.add(translation)
 
     if not session.query(User).get('test_user'):
