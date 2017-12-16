@@ -5,16 +5,21 @@ from os import path
 from flask import Flask, request
 from flask_jwt import JWT, jwt_required, current_identity
 
-from eduserver.db.entity.base import Session, engine, Base
-from eduserver.db.entity.user import User
-from eduserver.db.db_controller import DBController
+from eduserver.db import closing_session, engine, Base, User
 
 from eduserver.environment import _package_dir
 
 
 def authenticate(login, password):
-    if login == 'user' and password == 'pwd':
-        return user
+    print('find User:', login, password)
+    with closing_session() as session:
+        user = session.query(User).get(login)
+        if user and user.password == password:
+            print('User find')
+            return user.get_id_holder()
+        else:
+            print('User NOT find')
+            return None
 
 
 def identity(payload):
@@ -41,23 +46,28 @@ def after_request(response):
 @app.route('/register', methods=('POST', ))
 def register_new_user():
     data = json.loads(request.data.decode())
-    print('firstName: {}'.format(data['firstName']))
-    print('lastName: {}'.format(data['lastName']))
-    print('email: {}'.format(data['email']))
-    print('login: {}'.format(data['login']))
-    print('password: {}'.format(data['password']))
-    return json.dumps(data['username'] != 'failed')
+    # TODO: validate data
+    user = User(
+        login=data['login'],
+        password=data['password'],
+        first_name=data['firstName'],
+        last_name=data['lastName'],
+        email=data['email']
+    )
+    with closing_session() as session:
+        if not session.query(User).get(user.login):
+            session.add(user)
+            return json.dumps(True)
+        return json.dumps(False)
 
 
 @app.route('/userinfo')
 @jwt_required()
 def get_user_info():
-    return json.dumps({
-        'firstName': 'Petr',
-        'lastName': 'Popadi',
-        'email': 'petrpopadi@example.com',
-        'login': 'petr_popadi',
-    })
+    print(current_identity)
+    with closing_session() as session:
+        user = session.query(User).get(str(current_identity))
+        return json.dumps(user.get_info())
 
 
 @app.route('/dict', methods=('PUT', 'POST'))
@@ -107,21 +117,21 @@ def generate_task():
         },
     ])
 
-@app.route('/users')
-def get_users():
-    # users = session.query(User)
-    users = DBController.get_users()
-    return json.dumps({
-        'First user: ': users[0].name
-    })
-
-@app.route('/dictionary')
-def get_dictionary_by_user():
-    users = DBController.get_users()
-    dict = DBController.get_dictionary_by_user(users[0])
-    return json.dumps({
-        'First target word in dictionary is ': dict[0].tgt_word.text
-    })
+# @app.route('/users')
+# def get_users():
+#     # users = session.query(User)
+#     users = DBController.get_users()
+#     return json.dumps({
+#         'First user: ': users[0].name
+#     })
+#
+# @app.route('/dictionary')
+# def get_dictionary_by_user():
+#     users = DBController.get_users()
+#     dict = DBController.get_dictionary_by_user(users[0])
+#     return json.dumps({
+#         'First target word in dictionary is ': dict[0].tgt_word.text
+#     })
 
 if __name__ == '__main__':
     app.run()

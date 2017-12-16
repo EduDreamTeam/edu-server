@@ -1,8 +1,9 @@
-from eduserver.db.entity.base import Session, engine, Base
-from eduserver.db.entity.language import Language
-from eduserver.db.entity.user import User
-from eduserver.db.entity.translation import Translation
-from eduserver.db.entity.word import Word
+from eduserver.db import Session, engine, Base
+from eduserver.db import Language
+from eduserver.db import User
+from eduserver.db import Translation
+from eduserver.db import Word
+
 
 def main():
     print('Start')
@@ -24,14 +25,17 @@ def main():
     translation = Translation(word1, word2)
     session.add(translation)
 
-    user = User("John", "password")
-    user.dictionary.append(translation)
+    if not session.query(User).get('test_user'):
+        user = User('test_user', '1234', 'test_first_name', 'test_last_name', 'mail@example.com')
+        user.dictionary.append(translation)
+        session.add(user)
 
-    session.add(user)
-    session.commit()
-    session.close()
+        session.commit()
+        session.close()
+        print('User added')
 
     print('Session closed')
+
 
 if __name__ == '__main__':
     main()
