@@ -10,8 +10,8 @@
 ### Run
 
 ```bash
-cd path_to_edu_server
-python3 server
+pip3 install git+https://github.com/EduDreamTeam/edu-server.git --user
+python3 -m eduserver
 ```
 
 ### Architecture

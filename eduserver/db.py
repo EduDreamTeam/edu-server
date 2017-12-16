@@ -114,3 +114,11 @@ class User(Base):
             res[k].append(v)
 
         return dict(res)
+
+def initialize_db():
+    Base.metadata.create_all(engine)
+    with closing_session() as session:
+        russian = Language("Russian")
+        english = Language("English")
+        session.add(russian)
+        session.add(english)
