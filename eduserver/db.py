@@ -69,7 +69,7 @@ class User(Base):
     IdHolder = namedtuple('IdHolder', ['id'])
 
     users_translations_association = Table('users_translations', Base.metadata,
-                                           Column('user_login', Integer, ForeignKey('users.login')),
+                                           Column('user_login', String(128), ForeignKey('users.login')),
                                            Column('translation_id', Integer, ForeignKey('translations.id'))
                                            )
 
