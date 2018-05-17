@@ -5,6 +5,8 @@ from collections import namedtuple, defaultdict
 from sqlalchemy import create_engine, Table, Column, Integer, ForeignKey, String, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.types import DateTime
+from sqlalchemy.types import Float
 
 from eduserver.environment import _package_dir
 
@@ -21,6 +23,19 @@ def closing_session():
     finally:
         session.commit()
         session.close()
+
+class Result(Base):
+    __tablename__ = 'results'
+    id = Column(Integer, primary_key=True)
+    user_login = Column(String(128), ForeignKey('users.login'))
+    user = relationship("User", foreign_keys=[user_login])
+    result = Column(Float)
+    date = Column(DateTime)
+
+    def __init__(self, user_login, result, date):
+        self.user_login = user_login
+        self.result = result
+        self.date = date
 
 
 class Word(Base):
@@ -81,6 +96,7 @@ class User(Base):
     lastName = Column(String(128))
     email = Column(String(128))
     dictionary = relationship("Translation", secondary=users_translations_association)
+    results = relationship("Result")
 
     def __init__(self, login, password, first_name, last_name, email):
         self.login = login
