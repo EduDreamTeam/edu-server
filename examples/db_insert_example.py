@@ -3,6 +3,8 @@ from eduserver.db import Language
 from eduserver.db import User
 from eduserver.db import Translation
 from eduserver.db import Word
+from eduserver.db import Result
+from datetime import datetime
 
 
 def main():
@@ -34,6 +36,8 @@ def main():
     if not session.query(User).get('test_user'):
         user = User('test_user', '1234', 'test_first_name', 'test_last_name', 'mail@example.com')
         user.dictionary.append(translation)
+        result = Result(user, 0.6, datetime.now())
+        user.results.append(result)
         session.add(user)
 
         session.commit()
