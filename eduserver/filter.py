@@ -1,5 +1,5 @@
-class Filter:
-    def __init(self, start, end, min, max):
+class Filter(object):
+    def __init__(self, start, end, min, max):
         self.start = start
         self.end = end
         self.min = min
