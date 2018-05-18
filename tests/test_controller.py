@@ -34,9 +34,34 @@ class TestController(unittest.TestCase):
         exptected.append(self.result3)
         self.assertEqual(exptected, actual)
 
+    def test_filter_by_date_start_is_later(self):
+        with self.assertRaises(Exception) as cm:
+            self.controller.filter_by_date(self.results, self.end, self.start)
+        err = cm.exception
+        self.assertEqual(str(err), "Start can't be later than end!")
+
+    def test_filter_by_date_none(self):
+        with self.assertRaises(Exception) as cm:
+            self.controller.filter_by_date(self.results, None, None)
+        err = cm.exception
+        self.assertEqual(str(err), "Start and end date can't be empty!")
+
     def test_filter_by_results(self):
         actual = self.controller.filter_by_results(self.results, self.min, self.max)
         exptected = []
         exptected.append(self.result2)
         exptected.append(self.result3)
         self.assertEqual(exptected, actual)
+
+    def test_filter_by_result_reverse_order(self):
+        actual = self.controller.filter_by_results(self.results, self.max, self.min)
+        exptected = []
+        exptected.append(self.result2)
+        exptected.append(self.result3)
+        self.assertEqual(exptected, actual)
+
+    def test_filter_by_result_none(self):
+        with self.assertRaises(Exception) as cm:
+            self.controller.filter_by_results(self.results, None, None)
+        err = cm.exception
+        self.assertEqual(str(err), "Min and max can't be empty!")
