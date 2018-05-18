@@ -3,10 +3,13 @@ import random
 
 from os import path
 
+import datetime
 from flask import Flask, request
 from flask_jwt import JWT, jwt_required, current_identity
 
-from eduserver.db import closing_session, initialize_db, User, Language, Word, Translation
+from eduserver.db import closing_session, initialize_db, User, Language, Word, Translation, Result
+from eduserver.controller import Controller
+from eduserver.filter import Filter
 
 from eduserver.environment import _package_dir
 
@@ -66,7 +69,6 @@ def get_user_info():
         user = session.query(User).get(str(current_identity))
         return json.dumps(user.info)
 
-
 @app.route('/dict', methods=('PUT', 'POST'))
 @jwt_required()
 def process_dict_request_write():
@@ -93,6 +95,28 @@ def process_dict_request_write():
 
     return json.dumps(True)
 
+@app.route('/statistics', methods=('POST', ))
+@jwt_required()
+def set_statistics():
+    with closing_session() as session:
+        data = json.loads(request.data.decode())
+        result = data['result']
+        res = Result(User.login, result, datetime.now())
+        user = session.query(User).get(str(current_identity))
+        user.results.apend(res)
+        return json.dumps(True)
+
+@app.route('/statistics', methods=('GET', ))
+@jwt_required()
+def get_statistics():
+    start = request.args.get('startDate')
+    end = request.args.get('endDate')
+    min = request.args.get('minResult')
+    max = request.args.get('maxResult')
+    controller = Controller()
+    filter = Filter(start, end, min, max)
+    results = controller.get_results_by_filter(filter)
+    return json.dumps(results)
 
 @app.route('/dict', methods=('GET', ))
 @jwt_required()

@@ -21,6 +21,7 @@ def closing_session():
     try:
         yield session
     finally:
+        session.expunge_all()
         session.commit()
         session.close()
 
