@@ -34,14 +34,14 @@ class TestController(unittest.TestCase):
         exptected.append(self.result3)
         self.assertEqual(exptected, actual)
 
-    def test_filter_by_date_start_is_later(self):
+    def test_get_results_start_is_later(self):
         filter = Filter(self.end, self.start, self.min, self.max)
         with self.assertRaises(Exception) as cm:
             self.controller.get_results_by_filter(filter)
         err = cm.exception
         self.assertEqual(str(err), "Start can't be later than end!")
 
-    def test_filter_by_date_none(self):
+    def test_get_results_start_end_none(self):
         filter = Filter(None, None, self.min, self.max)
         with self.assertRaises(Exception) as cm:
             self.controller.get_results_by_filter(filter)
@@ -55,14 +55,14 @@ class TestController(unittest.TestCase):
         exptected.append(self.result3)
         self.assertEqual(exptected, actual)
 
-    def test_filter_by_result_reverse_order(self):
+    def test_get_results_parameters_reverse_order(self):
         actual = self.controller.filter_by_results(self.results, self.max, self.min)
         exptected = []
         exptected.append(self.result2)
         exptected.append(self.result3)
         self.assertEqual(exptected, actual)
 
-    def test_filter_by_result_none(self):
+    def test_get_results_result_none(self):
         filter = Filter(self.start, self.end, None, None)
         with self.assertRaises(Exception) as cm:
             self.controller.get_results_by_filter(filter)
