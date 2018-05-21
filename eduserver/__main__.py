@@ -11,6 +11,7 @@ from eduserver.db import closing_session, initialize_db, User, Language, Word, T
 from eduserver.controller import Controller
 from eduserver.filter import Filter
 import dateutil.parser
+from datetime import timedelta
 
 from eduserver.environment import _package_dir
 
@@ -30,6 +31,7 @@ def identity(payload):
 
 app = Flask(__name__)
 app.config.from_pyfile(path.join(_package_dir, 'environment.py'))
+app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=3600)
 
 jwt = JWT(app, authenticate, identity)
 
@@ -120,24 +122,24 @@ def get_statistics():
     filter = Filter(start, end, min, max)
     results = controller.get_results_by_filter(filter)
     # res1 = results[0]
-    res =  {
-        'date': '2018-12-30T21:00:00.000Z',
-        'result': 1,
-        'id': 1
-    }
+    # res =  {
+    #     'date': '2018-12-30T21:00:00.000Z',
+    #     'result': 1,
+    #     'id': 1
+    # }
     res1 = []
-    res1.append(res)
-    res1.append({
-        'date': '2018-12-31T21:00:00.000Z',
-        'result': 0.5,
-        'id': 2
-    })
-    # for result in results:
-    #     res1.append({
-    #         'date': result.date.isoformat(),
-    #         'result': result.result,
-    #         'id': result.id
-    #     })
+    # res1.append(res)
+    # res1.append({
+    #     'date': '2018-12-31T21:00:00.000Z',
+    #     'result': 0.5,
+    #     'id': 2
+    # })
+    for result in results:
+        res1.append({
+            'date': result.date.isoformat(),
+            'result': result.result,
+            'id': result.id
+        })
     # print("return "+ json.dumps(res))
     return json.dumps(res1)
 
