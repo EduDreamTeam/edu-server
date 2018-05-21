@@ -3,11 +3,15 @@ from eduserver.db_controller import DBController
 
 class Controller:
     def get_results_by_filter(self, filter):
-        self.validate_filter(filter)
         db_controller = DBController()
+        # return db_controller.get_results_by_user()
+        # if (filter.min is None and filter.max is None and filter.start is None and filter.end is None):
+        #     print("here")
+
+        self.validate_filter(filter)
         results = db_controller.get_results_by_user()
-        results = self.filter_by_date(filter.start, filter.end)
-        results = self.filter_by_results(filter.min, filter.max)
+        results = self.filter_by_date(results, filter.start, filter.end)
+        results = self.filter_by_results(results, filter.min, filter.max)
         return results
 
     def validate_filter(self, filter):

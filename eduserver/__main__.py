@@ -10,6 +10,7 @@ from flask_jwt import JWT, jwt_required, current_identity
 from eduserver.db import closing_session, initialize_db, User, Language, Word, Translation, Result
 from eduserver.controller import Controller
 from eduserver.filter import Filter
+import dateutil.parser
 
 from eduserver.environment import _package_dir
 
@@ -109,14 +110,36 @@ def set_statistics():
 @app.route('/statistics', methods=('GET', ))
 @jwt_required()
 def get_statistics():
-    start = request.args.get('startDate')
-    end = request.args.get('endDate')
-    min = request.args.get('minResult')
-    max = request.args.get('maxResult')
+    start = dateutil.parser.parse(request.args.get('startDate'))
+    start = start.replace(tzinfo=None)
+    end = dateutil.parser.parse(request.args.get('endDate'))
+    end = end.replace(tzinfo=None)
+    min = float(request.args.get('minResult'))
+    max = float(request.args.get('maxResult'))
     controller = Controller()
     filter = Filter(start, end, min, max)
     results = controller.get_results_by_filter(filter)
-    return json.dumps(results)
+    # res1 = results[0]
+    res =  {
+        'date': '2018-12-30T21:00:00.000Z',
+        'result': 1,
+        'id': 1
+    }
+    res1 = []
+    res1.append(res)
+    res1.append({
+        'date': '2018-12-31T21:00:00.000Z',
+        'result': 0.5,
+        'id': 2
+    })
+    # for result in results:
+    #     res1.append({
+    #         'date': result.date.isoformat(),
+    #         'result': result.result,
+    #         'id': result.id
+    #     })
+    # print("return "+ json.dumps(res))
+    return json.dumps(res1)
 
 @app.route('/dict', methods=('GET', ))
 @jwt_required()
